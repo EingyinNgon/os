@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    {% extends 'base.html' %}
+
+    {% block content %}
+    <div class="container mt-5">
+        <div class="card border-danger mx-auto" style="max-width: 500px;">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Confirm Delete</h5>
+            </div>
+            <div class="card-body text-center">
+                <p>Are you sure you want to delete user <strong>{{ user_obj.username }}</strong>?</p>
+                <form method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger px-4">Yes, Delete</button>
+                    <a href="{% url 'user_list' %}" class="btn btn-secondary px-4">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+</body>
+
+</html>

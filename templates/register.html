@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    {% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="main-card shadow-sm border-0 p-4 bg-white" style="border-radius: 15px;">
+            <h3 class="fw-bold text-center mb-4">Create Account</h3>
+            <hr>
+            
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Username</label>
+                    <input type="text" name="username" class="form-control" placeholder="Choose a username" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Email Address</label>
+                    <input type="email" name="email" class="form-control" placeholder="name@example.com" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Password</label>
+                    <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                </div>
+
+                <hr class="my-4">
+                <h5 class="text-primary mb-3">Profile Details</h5>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Phone Number</label>
+                    <input type="text" name="phone_no" class="form-control" placeholder="09xxxxxxxxx" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Address</label>
+                    <textarea name="address" class="form-control" rows="2" placeholder="Your full address" required></textarea>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg shadow-sm">Sign Up</button>
+                    <a href="{% url 'login' %}" class="btn btn-link text-muted">Already have an account? Login</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+</body>
+</html>

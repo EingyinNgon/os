@@ -1,0 +1,56 @@
+
+    {% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="main-card shadow-sm border-0 p-4" style="background: white; border-radius: 15px;">
+            <h3 class="fw-bold mb-4">Add New User</h3>
+            <hr>
+
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6 border-end">
+                        <h5 class="text-primary mb-3">Account Info</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" name="username" class="form-control" placeholder="Enter username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" placeholder="email@example.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <h5 class="text-primary mb-3">Profile Details</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Phone Number</label>
+                            <input type="text" name="phone_no" class="form-control" placeholder="09xxxxxxxxx" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Vendor Name (Vantor)</label>
+                            <input type="text" name="vantor" class="form-control" placeholder="Shop/Vendor name">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Address</label>
+                            <textarea name="address" class="form-control" rows="1" placeholder="Current address" required></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex justify-content-end">
+                    <a href="{% url 'user_list' %}" class="btn btn-light me-2">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4">Save User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

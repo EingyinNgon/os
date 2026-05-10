@@ -1,0 +1,48 @@
+
+    {% extends 'base.html' %}
+
+    {% block content %}
+    <div class="main-card">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold m-0">Product Categories</h3>
+            <a href="{% url 'add_category' %}" class="btn btn-primary px-4 shadow-sm">
+                + Add New Category
+            </a>
+           
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover border">
+                <thead>
+                    <tr>
+                        <th class="py-3 px-4">Category Name</th>
+                        <th class="py-3 text-center" style="width: 200px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in categories %}
+                    <tr>
+                        <td>{{ category.name }}</td>
+                        <td>{{ category.descriptions }}</td>
+                        <td>
+                            <a href="{% url 'edit_category' category.id %}" class="btn btn-warning btn-sm">Edit</a>
+
+                            <a href="{% url 'delete_category' category.id %}" class="btn btn-danger btn-sm"
+                                onclick="return confirm('Are you sure?');">
+                                Delete
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center py-5 text-muted">
+                            No categories found. Click "Add New Category" to get started.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endblock %}
+    </div>
