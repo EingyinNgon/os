@@ -13,15 +13,18 @@
 
         <div class="table-responsive">
             <table class="table table-hover border">
-                <thead>
+                <thead class="table-dark">
                     <tr>
+                         <th class="py-3">No</th>
                         <th class="py-3 px-4">Category Name</th>
+                        <th class="py-3 px-4">Description</th>
                         <th class="py-3 text-center" style="width: 200px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for category in categories %}
                     <tr>
+                        <td>{{ categories.start_index|add:forloop.counter0 }}</td>
                         <td>{{ category.name }}</td>
                         <td>{{ category.descriptions }}</td>
                         <td>
@@ -42,7 +45,9 @@
                     {% endfor %}
                 </tbody>
             </table>
+           
         </div>
+         {% include 'paggination/pagg.html' with page_obj=categories %}
     </div>
     {% endblock %}
     </div>

@@ -1,8 +1,10 @@
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.contrib.auth.models import User  
+from django.contrib.auth.models import User
 # default table ဖြင့်ဆက်သွယ်ခြင်း
+# from .models import Category
+
 
 # User ဆောက်ပြီးတာနဲ့ ဒီ function က အလိုအလျောက် အလုပ်လုပ်မှာပါ
 @receiver(post_save, sender=User)
@@ -22,13 +24,14 @@ ORDER_STATUS_CHOICES = [
     ]
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    
+    user = models.OneToOneField(User, on_delete=models.CASCADE)    
     phone_no = models.CharField(max_length=15)
-    # int သည် 1 to 9 အထိသာဖြစ်သဖြင့် charfield ကို အသုံးပ​ြုခြင်းဖြစ်သညါ
-    
+    # int သည် 1 to 9 အထိသာဖြစ်သဖြင့် charfield ကို အသုံးပ​ြုခြင်းဖြစ်သညါ    
     address = models.TextField()
-    vantor = models.CharField(max_length=100) # Assuming 'vantor' is a string
+
+    is_vendor = models.BooleanField(default=False) # 'vantor' string အစား BooleanField ပြောင်းလိုက်ပါပြီ
+    shop_logo = models.ImageField(upload_to='vendors/', null=True, blank=True) # Vendor ပုံသိမ်းရန်
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -90,6 +93,7 @@ class Item(models.Model):
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    image = models.ImageField(upload_to='items/', null=True, blank=True)
 
     def __str__(self):
         return self.name   

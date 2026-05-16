@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import Category, UserProfile, SubCategory
+from .models import Category, UserProfile, SubCategory, Item
+from django.core.paginator import Paginator
 
 def is_admin(user):
     return user.is_superuser
@@ -16,7 +17,11 @@ def user_list(request):
     # print(request.user.is_superuser)
     if request.user.is_superuser:
         users = User.objects.all().select_related('userprofile').order_by('-date_joined')
-        return render(request, 'user_list.html', {'users': users})
+        paginator = Paginator(users, 10)
+
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        return render(request, 'user/user_list.html', {'users': page_obj})
     else:
         return HttpResponse('invalid route')
     
@@ -29,33 +34,51 @@ def add_user(request):
         username = request.POST.get('username')
         email = request.POST.get('email')
         password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+
+        if password != confirm_password:
+            messages.error(request, "Password နှစ်ခု မတူညီပါဘူး။ ပြန်စစ်ပေးပါ။")
+            return render(request, 'user/add_user.html')
         
         # ၂။ UserProfile Table အတွက် Data ယူမယ်
-        phone = request.POST.get('phone_no')
-        address = request.POST.get('address')
-        vantor = request.POST.get('vantor')
+        # phone = request.POST.get('phone_no')
+        # address = request.POST.get('address')
+        # vantor = request.POST.get('vantor')
         
         try: 
             user = User.objects.create_user(username=username, password=password, email=email)
-
+            messages.success(request, f"User {username} ကို အောင်မြင်စွာ ဆောက်ပြီးပါပြီ။")
             # Signal က ဆောက်ပေးလိုက်တဲ့ Profile ကိုပဲ ပြန်ယူပြီး အချက်အလက်ဖြည့်မယ်
             profile = user.userprofile  
-            profile.phone = request.POST.get('phone_no')
+            profile.phone_no = request.POST.get('phone_no')
+            print( request.POST.get('phone_no'))
             profile.address = request.POST.get('address')
-            profile.save()
+
+            # ✨ HTML Text အကွက်ကနေ ဆိုင်နာမည်ကို လှမ်းယူမယ်
+            shop_name = request.POST.get('vantor') 
+            logo = request.FILES.get('vendor_image') # ပုံကိုဖမ်းမယ်
+
+            if shop_name: # တကယ်လို့ ဆိုင်နာမည် ရိုက်ထည့်ထားခဲ့ရင်...
+                profile.vantor = shop_name       # သင့် Model ထဲက CharField ထဲ ဆိုင်နာမည်သိမ်းမယ်
+                profile.is_vendor = True         # သူက Vendor ဖြစ်သွားပြီမို့ True ပေးမယ်
+                if logo:
+                 profile.shop_logo = logo     # ဆိုင် Logo ပုံပါရှိရင် တစ်ခါတည်း သိမ်းမယ်
+            else:
+                profile.is_vendor = False        # ဆိုင်နာမည် မရိုက်ရင် ရိုးရိုး user အဖြစ် False ပဲ ထားမယ်            
+            profile.save()          
                     
             return redirect('user_list')
         except Exception as e:
-            return render(request, 'add_user.html')
+            messages.error(request, f"Error: {e}")
         
-    return render(request, 'add_user.html')
+    return render(request, 'user/add_user.html')
 
 @login_required
 @user_passes_test(is_admin)
 def user_detail(request, pk):
     # ID နဲ့ ရှာမယ်၊ မရှိရင် 404 Error ပေးမယ်
     user_obj = get_object_or_404(User, pk=pk)
-    return render(request, 'user_detail.html', {'user_obj': user_obj})
+    return render(request, 'user/user_detail.html', {'user_obj': user_obj})
 
 @login_required
 @user_passes_test(is_admin)
@@ -80,7 +103,7 @@ def update_user(request, pk):
         
         return redirect('user_list')
 
-    return render(request, 'update_user.html', {'user_obj': user_obj})
+    return render(request, 'user/update_user.html', {'user_obj': user_obj})
 
 # User ဖျက်ရန် (Delete)
 @login_required
@@ -105,14 +128,18 @@ def add_category(request):
         )
         return redirect('category_list')
     
-    return render(request, 'add_category.html')
+    return render(request, 'category/add_category.html')
 
 @login_required
 @user_passes_test(is_admin)   
 def category_list(request):
    # ဖျက်မထားတဲ့ Category တွေကိုပဲ ယူမယ်
     categories = Category.objects.filter(is_deleted=False).order_by('-created_at')
-    return render(request, 'category_list.html', {'categories': categories})
+    paginator = Paginator(categories, 10)
+
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'category/category_list.html', {'categories': page_obj})
 
 @login_required
 @user_passes_test(is_admin)
@@ -140,7 +167,7 @@ def edit_category(request, pk):
         return redirect('category_list')
 
     # GET method ဆိုရင် လက်ရှိ data တွေနဲ့ edit_category.html ကို ပြမယ်
-    return render(request, 'edit_category.html', {'category': category})
+    return render(request, 'category/edit_category.html', {'category': category})
 
 def register_user(request):
     if request.method == "POST":
@@ -184,13 +211,16 @@ def add_subcategory(request):
 
     # Dropdown မှာ ပြဖို့အတွက် Category တွေကို ယူသွားမယ်
     categories = Category.objects.filter(is_deleted=False)
-    return render(request, 'add_subcategory.html', {'categories': categories})
+    return render(request, 'subcategory/add_subcategory.html', {'categories': categories})
 
 @login_required
 @user_passes_test(is_admin)
 def subcategory_list(request):
     subcategories = SubCategory.objects.filter(is_deleted=False).order_by('-created_at')
-    return render(request, 'subcategory_list.html', {'subcategories': subcategories})
+    paginator = Paginator(subcategories, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'subcategory/subcategory_list.html', {'subcategories':  page_obj})
 
 @login_required
 @user_passes_test(is_admin)
@@ -213,7 +243,114 @@ def edit_subcategory(request, pk):
         return redirect('subcategory_list')
     
     categories = Category.objects.filter(is_deleted=False)
-    return render(request, 'edit_subcategory.html', {
+    return render(request, 'subcategory/edit_subcategory.html', {
         'subcategory': sub, 
         'categories': categories
     })
+
+@login_required
+def item_list(request):
+    if request.user.is_superuser:
+        # Admin ဆိုရင် မဖျက်ရသေးတဲ့ Item အားလုံးကို ပြမယ်
+        items = Item.objects.filter(is_deleted=False).select_related('sub_category', 'created_by')
+        paginator = Paginator(items, 10)
+
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+    elif request.user.userprofile.is_vendor:
+        # Vendor ဆိုရင် သူကိုယ်တိုင် ဆောက်ထားတဲ့ ပစ္စည်းတွေကိုပဲ ပြမယ်
+        items = Item.objects.filter(created_by=request.user, is_deleted=False).select_related('sub_category')
+    else:
+        items = Item.objects.none()
+        
+    return render(request, 'item/item_list.html', {'items': page_obj})
+
+# ၂။ Add Item (Create)
+@login_required
+def add_item(request):
+    # Admin သို့မဟုတ် Vendor ဖြစ်မှ ပစ္စည်းတင်ခွင့်ပေးမယ်
+    if not (request.user.is_superuser or request.user.userprofile.is_vendor):
+        messages.error(request, "You are not allowed to post items!")
+        return redirect('user_list')
+
+    if request.method == "POST":
+        name = request.POST.get('name')
+        sub_cat_id = request.POST.get('sub_category')
+        amount = request.POST.get('amount')
+        size = request.POST.get('size')
+        buy_price = request.POST.get('buy_price')
+        sale_price = request.POST.get('sale_price')
+        product_image = request.FILES.get('item_image')
+        
+        # Discount logic (တကယ်လို့ Form က ပါလာရင်)
+        is_discount = request.POST.get('is_discount') == 'on'
+        discount = request.POST.get('discount') or 0.00
+
+        try:
+            Item.objects.create(
+                name=name,
+                sub_category_id=sub_cat_id,
+                amount=amount,
+                size=size,
+                buy_price=buy_price,
+                sale_price=sale_price,
+                image=product_image,
+                is_discount=is_discount,
+                discount=discount,
+                created_by=request.user  # ဘယ်သူဆောက်တာလဲဆိုတဲ့နေရာမှာ လက်ရှိ login ဝင်ထားတဲ့ user ကို ထည့်မယ်
+            )
+            messages.success(request, f"Product {name} ကို အောင်မြင်စွာ တင်ပြီးပါပြီ။")
+            return redirect('item_list')
+        except Exception as e:
+            messages.error(request, f"Error: {e}")
+
+    # Dropdown မှာ ရွေးဖို့အတွက် SubCategory တွေကို ဆွဲထုတ်ပေးမယ်
+    sub_categories = SubCategory.objects.all()
+    return render(request, 'item/add_item.html', {'sub_categories': sub_categories})
+
+@login_required
+def edit_item(request, item_id):
+    # ပြင်မယ့် Item ကို Database ထဲက လှမ်းရှာမယ်
+    item = get_object_or_404(Item, id=item_id, is_deleted=False)
+    
+    # Security: မိမိပစ္စည်း မဟုတ်ရင် (Admin လည်းမဟုတ်ရင်) ပေးမပြင်ဘူး
+    if not (request.user.is_superuser or item.created_by == request.user):
+        messages.error(request, "သင်က ဒီပစ္စည်းကို ပြင်ဆင်ပိုင်ခွင့် မရှိပါဘူး။")
+        return redirect('item_list')
+
+    if request.method == "POST":
+        item.name = request.POST.get('name')
+        item.sub_category_id = request.POST.get('sub_category')
+        item.amount = request.POST.get('amount')
+        item.buy_price = request.POST.get('buy_price')
+        item.sale_price = request.POST.get('sale_price')
+        
+        # ပုံအသစ် တင်လာရင် အဟောင်းနေရာမှာ အစားထိုးမယ်
+        new_image = request.FILES.get('item_image')
+        if new_image:
+            item.image = new_image
+            
+        item.save()
+        messages.success(request, f"Product {item.name} ကို ပြင်ဆင်ပြီးပါပြီ။")
+        return redirect('item_list')
+
+    sub_categories = SubCategory.objects.all()
+    return render(request, 'item/edit_item.html', {'item': item, 'sub_categories': sub_categories})
+
+
+# ၄။ Delete Item (Delete)
+@login_required
+def delete_item(request, item_id):
+    item = get_object_or_404(Item, id=item_id, is_deleted=False)
+    
+    # Security စစ်ဆေးခြင်း
+    if not (request.user.is_superuser or item.created_by == request.user):
+        messages.error(request, "သင်က ဒီပစ္စည်းကို ဖျက်ပိုင်ခွင့် မရှိပါဘူး။")
+        return redirect('item_list')
+
+    # သင့် Model ရဲ့ Plan အတိုင်း Database ထဲက အပြီးမဖျက်ဘဲ Status ကိုပဲ True ပေးလိုက်တာပါ (Soft Delete)
+    item.is_deleted = True
+    item.save()
+    
+    messages.success(request, f"Product {item.name} ကို ဖျက်သိမ်းပြီးပါပြီ။")
+    return redirect('item_list')
