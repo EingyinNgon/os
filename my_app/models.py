@@ -150,3 +150,31 @@ class SubCategory(models.Model):
 
     def __str__(self):
         return f"{self.category.name} -> {self.name}"
+    
+# ၁။ Cart Table (User တစ်ယောက်ချင်းစီရဲ့ ခြင်းတောင်းမကြီး)
+class Cart(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='cart')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Cart of {self.user.username}"
+
+    # Cart ထဲက ပစ္စည်းတွေအားလုံးရဲ့ စုစုပေါင်းတန်ဖိုးကို Auto တွက်ပေးမယ့် Function 
+    @property
+    def total_price(self):
+        return sum(item.subtotal for item in self.cart_items.all())
+
+# ၂။ CartItem Table (ခြင်းတောင်းထဲက ပစ္စည်းတစ်ခုချင်းစီနှင့် အရေအတွက်)
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='cart_items')
+    item = models.ForeignKey('Item', on_delete=models.CASCADE) # သင့်ရဲ့ Item Model နှင့် ချိတ်ခြင်း
+    quantity = models.PositiveIntegerField(default=1) # ဝယ်မယ့် အရေအတွက်
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.quantity} x {self.item.name}"
+
+    # ပစ္စည်းတစ်ခုချင်းစီရဲ့ (ရောင်းဈေး x အရေအတွက်) ကို တွက်ပေးတာပါ
+    @property
+    def subtotal(self):
+        return self.item.sale_price * self.quantity

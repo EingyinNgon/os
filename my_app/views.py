@@ -2,15 +2,44 @@ from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import Category, UserProfile, SubCategory, Item
+from .models import Category, UserProfile, SubCategory, Item, Cart, CartItem
 from django.core.paginator import Paginator
 
 def is_admin(user):
     return user.is_superuser
 
-@login_required(login_url='login')
+# @login_required(login_url='login')
 def index(request):
-    return render(request, 'index.html')
+    # ✨ ပစ္စည်းရှိပြီး၊ စတော့လည်းရှိတဲ့ Sub-Category တွေကိုပဲ စစ်ထုတ်ယူမယ့် Senior အကြိုက် Point!
+    sub_categories = SubCategory.objects.filter(
+        items__is_deleted=False,
+        items__amount__gt=0
+    ).distinct() # က Category နာမည်တွေ ထပ်မနေအောင် လုပ်ပေးတာပါ
+    
+    # ၂။ User က Dropdown ကနေ ရွေးလိုက်တဲ့ SubCategory ID ကို URL ကနေ လှမ်းဖမ်းမယ်
+    selected_sub_cat = request.GET.get('subcategory')
+    
+    # ၃။ Logic စစ်မယ် - တစ်ခုခု ရွေးထားရင် စစ်ထုတ်မယ်၊ ဘာမှမရွေးရင် အကုန်ပြမယ်
+    if selected_sub_cat:
+        items = Item.objects.filter(
+            sub_category_id=selected_sub_cat, 
+            is_deleted=False,
+            amount__gt=0
+        )
+    else:
+        items = Item.objects.filter(
+            is_deleted=False,
+            amount__gt=0
+        )
+        
+    # ၄။ HTML ဘက်ကို ဒေတာတွေ သယ်သွားဖို့ Context ထဲ ထည့်မယ်
+    context = {
+        'sub_categories': sub_categories,
+        'items': items,
+        'selected_sub_cat': str(selected_sub_cat) if selected_sub_cat else None
+    }
+    
+    return render(request, 'index.html', context) 
 
 @login_required(login_url='login')
 def user_list(request):
@@ -354,3 +383,31 @@ def delete_item(request, item_id):
     
     messages.success(request, f"Product {item.name} ကို ဖျက်သိမ်းပြီးပါပြီ။")
     return redirect('item_list')
+
+# 1. Add to Cart Function (ခြင်းတောင်းထဲ ပစ္စည်းထည့်ခြင်း)
+@login_required
+def add_to_cart(request, item_id):
+    item = get_object_or_404(Item, id=item_id, is_deleted=False)
+    
+    # လက်ရှိ User မှာ Cart မရှိသေးရင် Auto ဆောက်ခိုင်းမယ် (get_or_create)
+    cart, created = Cart.objects.get_or_create(user=request.user)
+    
+    # ဒီပစ္စည်းက ခြင်းတောင်းထဲမှာ ရှိပြီးသားလား စစ်မယ်
+    cart_item, item_created = CartItem.objects.get_or_create(cart=cart, item=item)
+    
+    if not item_created:
+        # ရှိပြီးသားဆိုရင် အရေအတွက်ကို ၁ တိုးမယ်
+        cart_item.quantity += 1
+        cart_item.save()
+        messages.success(request, f"{item.name} ရဲ့ အရေအတွက်ကို တိုးမြှင့်လိုက်ပါပြီ။")
+    else:
+        messages.success(request, f"{item.name} ကို ခြင်းတောင်းထဲ ထည့်လိုက်ပါပြီ။")
+        
+    return redirect('cart_detail') 
+
+# 2. Cart Detail View (ခြင်းတောင်းထဲက ပစ္စည်းများ သွားကြည့်ရန် Page)
+@login_required
+def cart_detail(request):
+    # User ရဲ့ cart ကို ဆွဲထုတ်မယ်၊ မရှိသေးရင် အလွတ်တစ်ခု ဆောက်ပေးမယ်
+    cart, created = Cart.objects.get_or_create(user=request.user)
+    return render(request, 'cart_detail.html', {'cart': cart})
