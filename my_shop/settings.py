@@ -129,3 +129,7 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'user_list'  # Login ဝင်ပြီးရင် သွားမယ့်နေရာ
 # SITE_ID = 1
 LOGOUT_REDIRECT_URL = 'index'     # Logout ထွက်ပြီးရင် သွားမယ့်နေရာ
+
+import os
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

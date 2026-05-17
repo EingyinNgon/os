@@ -21,7 +21,7 @@
             <tbody>
                 {% for user in users %}
                 <tr>
-                    <td>{{ forloop.counter }}</td>
+                    <td>{{ users.start_index|add:forloop.counter0 }}</td>
                     <td>
                         <a href="{% url 'user_detail' user.pk %}" class="text-decoration-none fw-bold text-primary">
                             {{ user.username }}
@@ -50,5 +50,6 @@
                 {% endfor %}
             </tbody>
         </table>
+        {% include 'paggination/pagg.html' with page_obj=users %}
     </div>
     {% endblock %}
