@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import Category, UserProfile, SubCategory, Item, Cart, CartItem
+from .models import Category, UserProfile, SubCategory, Item, Cart, CartItem, Order
 from django.core.paginator import Paginator
 
 def is_admin(user):
@@ -10,36 +10,26 @@ def is_admin(user):
 
 # @login_required(login_url='login')
 def index(request):
-    # ✨ ပစ္စည်းရှိပြီး၊ စတော့လည်းရှိတဲ့ Sub-Category တွေကိုပဲ စစ်ထုတ်ယူမယ့် Senior အကြိုက် Point!
-    sub_categories = SubCategory.objects.filter(
-        items__is_deleted=False,
-        items__amount__gt=0
-    ).distinct() # က Category နာမည်တွေ ထပ်မနေအောင် လုပ်ပေးတာပါ
+    sub_categories = SubCategory.objects.all().distinct()
     
     # ၂။ User က Dropdown ကနေ ရွေးလိုက်တဲ့ SubCategory ID ကို URL ကနေ လှမ်းဖမ်းမယ်
     selected_sub_cat = request.GET.get('subcategory')
     
-    # ၃။ Logic စစ်မယ် - တစ်ခုခု ရွေးထားရင် စစ်ထုတ်မယ်၊ ဘာမှမရွေးရင် အကုန်ပြမယ်
-    if selected_sub_cat:
+    if selected_sub_cat and selected_sub_cat != 'all' and selected_sub_cat != '':
         items = Item.objects.filter(
             sub_category_id=selected_sub_cat, 
-            is_deleted=False,
-            amount__gt=0
+            is_deleted=False
         )
     else:
-        items = Item.objects.filter(
-            is_deleted=False,
-            amount__gt=0
-        )
-        
-    # ၄။ HTML ဘက်ကို ဒေတာတွေ သယ်သွားဖို့ Context ထဲ ထည့်မယ်
+        items = Item.objects.filter(is_deleted=False)
+    # ၄။ HTML ဘက်ကို ဒေတာတွေ ပို့ရန်
     context = {
         'sub_categories': sub_categories,
         'items': items,
-        'selected_sub_cat': str(selected_sub_cat) if selected_sub_cat else None
+        'selected_sub_cat': str(selected_sub_cat) if selected_sub_cat else 'all'
     }
     
-    return render(request, 'index.html', context) 
+    return render(request, 'index.html', context)
 
 @login_required(login_url='login')
 def user_list(request):
@@ -279,20 +269,28 @@ def edit_subcategory(request, pk):
 
 @login_required
 def item_list(request):
+    # ၁။ အရင်ဆုံး User Role အလိုက် သက်ဆိုင်ရာ ပစ္စည်းများကို ဆွဲထုတ်မည်
     if request.user.is_superuser:
         # Admin ဆိုရင် မဖျက်ရသေးတဲ့ Item အားလုံးကို ပြမယ်
         items = Item.objects.filter(is_deleted=False).select_related('sub_category', 'created_by')
-        paginator = Paginator(items, 10)
-
-        page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
-    elif request.user.userprofile.is_vendor:
+    elif hasattr(request.user, 'userprofile') and request.user.userprofile.is_vendor:
         # Vendor ဆိုရင် သူကိုယ်တိုင် ဆောက်ထားတဲ့ ပစ္စည်းတွေကိုပဲ ပြမယ်
         items = Item.objects.filter(created_by=request.user, is_deleted=False).select_related('sub_category')
     else:
         items = Item.objects.none()
         
-    return render(request, 'item/item_list.html', {'items': page_obj})
+    # ၂။ 🌟 [ဤနေရာသို့ ရွှေ့လိုက်ပါပြီ] ၎င်းပစ္စည်းများကိုမှ Paginator ဖြင့် စာမျက်နှာခွဲမည်
+    paginator = Paginator(items, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+        
+    # ၃။ HTML ထဲတွင် items ရော page_obj ပါ အဆင်ပြေပြေ သုံးနိုင်အောင် Context တွင် နှစ်ခုလုံး ထည့်ပေးလိုက်ပါသည်
+    context = {
+        'items': page_obj,    # loop ပတ်ရန်အတွက်
+        'page_obj': page_obj  # pagination ခလုတ်များ (Next/Prev) လုပ်ရန်အတွက်
+    }
+    
+    return render(request, 'item/item_list.html', context)
 
 # ၂။ Add Item (Create)
 @login_required
@@ -402,12 +400,127 @@ def add_to_cart(request, item_id):
         messages.success(request, f"{item.name} ရဲ့ အရေအတွက်ကို တိုးမြှင့်လိုက်ပါပြီ။")
     else:
         messages.success(request, f"{item.name} ကို ခြင်းတောင်းထဲ ထည့်လိုက်ပါပြီ။")
-        
-    return redirect('cart_detail') 
+
+    total_count = CartItem.objects.filter(cart=cart).count()
+    request.session['cart_items_count'] = total_count
+
+    next_url = request.GET.get('next', 'index')
+    return redirect(next_url)
 
 # 2. Cart Detail View (ခြင်းတောင်းထဲက ပစ္စည်းများ သွားကြည့်ရန် Page)
 @login_required
 def cart_detail(request):
     # User ရဲ့ cart ကို ဆွဲထုတ်မယ်၊ မရှိသေးရင် အလွတ်တစ်ခု ဆောက်ပေးမယ်
     cart, created = Cart.objects.get_or_create(user=request.user)
-    return render(request, 'cart_detail.html', {'cart': cart})
+    cart_items_list = CartItem.objects.filter(cart=cart)
+
+    paginator = Paginator(cart_items_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'cart': cart,
+        'cart_items': page_obj, 
+    }
+    return render(request, 'cart_detail.html', context)
+
+
+
+@login_required
+def update_cart_quantity(request, item_id, action):
+    cart = get_object_or_404(Cart, user=request.user)
+    cart_item = CartItem.objects.filter(cart=cart, item_id=item_id).first()
+    
+    if cart_item:
+        if action == 'increase':
+            if cart_item.item.amount > cart_item.quantity:
+                cart_item.quantity += 1
+                cart_item.save()
+        elif action == 'decrease':
+            if cart_item.quantity > 1:
+                cart_item.quantity -= 1
+                cart_item.save()
+            else:
+                cart_item.delete()
+                
+    # ခြင်းတောင်းထဲက ပစ္စည်းအရေအတွက် Session ကို Update ပြန်လုပ်ခြင်း
+    from django.db import models
+    total_items = CartItem.objects.filter(cart=cart).aggregate(total=models.Sum('quantity'))['total'] or 0
+    request.session['cart_items_count'] = total_items
+    
+    return redirect('cart_detail')
+
+@login_required
+def checkout_view(request):
+    """ ဝယ်သူကို လိပ်စာ၊ ဖုန်းနံပါတ် ဖြည့်ခိုင်းပြီး Order Summary ပြသမည့် စာမျက်နှာ """
+    cart = Cart.objects.filter(user=request.user).first()
+    
+    if not cart or not CartItem.objects.filter(cart=cart).exists():
+        return redirect('cart_detail')
+        
+    cart_items = CartItem.objects.filter(cart=cart)
+    total_amount = sum(cart_item.item.sale_price * cart_item.quantity for cart_item in cart_items)
+    
+    # UserProfile ထဲက ရှိပြီးသား ဖုန်းနှင့် လိပ်စာကို ဆွဲထုတ်ပြီး Form မှာ ကြိုပြထားရန်
+    profile = UserProfile.objects.filter(user=request.user).first()
+    
+    context = {
+        'cart_items': cart_items,
+        'total_amount': total_amount,
+        'profile': profile,
+    }
+    return render(request, 'checkout.html', context)
+
+
+@login_required
+def place_order(request):
+    """ Checkout Form က အချက်အလက်များကို ယူပြီး Database ထဲသို့ Order တကယ်သိမ်းမည့်နေရာ """
+    if request.method == 'POST':
+        cart = Cart.objects.filter(user=request.user).first()
+        if not cart or not CartItem.objects.filter(cart=cart).exists():
+            return redirect('cart_detail')
+            
+        cart_items = CartItem.objects.filter(cart=cart)
+        
+        shipping_phone = request.POST.get('phone_no')
+        shipping_address = request.POST.get('address')
+        
+        # ခြင်းတောင်းထဲက ပစ္စည်းတစ်ခုချင်းစီအတွက် မင်းရဲ့ Order Model ပုံစံအတိုင်း Loop ပတ်သိမ်းမည်
+        for cart_item in cart_items:
+            Order.objects.create(
+                item=cart_item.item,
+                amount=cart_item.quantity,
+                price=cart_item.item.sale_price,
+                discount=0.00,
+                order_status='pending',
+                created_by=request.user
+            )
+            
+            # ပစ္စည်းလက်ကျန် (Stock) နုတ်ခြင်း
+            if hasattr(cart_item.item, 'amount') and cart_item.item.amount >= cart_item.quantity:
+                cart_item.item.amount -= cart_item.quantity
+                cart_item.item.save()
+        
+        # ဝယ်ယူမှု ပြီးမြောက်၍ ခြင်းတောင်းကို ရှင်းထုတ်ခြင်း
+        cart_items.delete()
+        request.session['cart_items_count'] = 0
+        
+        return redirect('order_success') # Success View ဆီ သွားခိုင်းမည်
+        
+    return redirect('checkout_view')
+
+
+@login_required
+def order_success(request):
+    """ အော်ဒါတင်ခြင်း အောင်မြင်ကြောင်း သီးသန့်ပြသမည့် View """
+    return render(request, 'order_success.html')
+
+@login_required
+def order_index(request):
+    Order = User.objects.all().select_related('userprofile').order_by('-date_joined')
+    paginator = Paginator(Order, 10)
+
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'order/index.html', {'Order': page_obj})
+    

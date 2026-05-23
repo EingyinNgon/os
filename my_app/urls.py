@@ -27,6 +27,15 @@ urlpatterns = [
     path('items/add/', views.add_item, name='add_item'),
     path('items/edit/<int:item_id>/', views.edit_item, name='edit_item'),
     path('items/delete/<int:item_id>/', views.delete_item, name='delete_item'),
+
+    # cart crud
     path('cart/add/<int:item_id>/', views.add_to_cart, name='add_to_cart'),
     path('cart/', views.cart_detail, name='cart_detail'),
+    path('cart/update/<int:item_id>/<str:action>/', views.update_cart_quantity, name='update_cart_quantity'),
+
+    path('checkout/', views.checkout_view, name='checkout'), # Checkout စာမျက်နှာပြရန်
+    path('place-order/', views.place_order, name='place_order'), # Order တကယ်တင်ရန်
+    path('order-success/', views.order_success, name='order_success'), # အောင်မြင်ကြောင်းပြရန်
+
+    path('order', views.order_index, name='order_index')
 ]

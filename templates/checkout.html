@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5">
+    <h3 class="fw-bold text-dark mb-4"><i class="bi bi-credit-card-2-front"></i> Checkout Details</h3>
+
+    <form action="{% url 'place_order' %}" method="POST">
+        {% csrf_token %}
+        <div class="row g-4">
+            <!-- ဘယ်ဘက်ခြမ်း: လိပ်စာနှင့် ဖုန်းနံပါတ် ဖြည့်ရန်နေရာ -->
+            <div class="col-lg-7">
+                <div class="card shadow-sm p-4 border-0">
+                    <h5 class="fw-bold mb-3 text-secondary">Shipping Information</h5>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Contact Phone Number</label>
+                        <input type="text" name="phone_no" class="form-control" value="{{ profile.phone_no }}" required
+                            placeholder="ဥပမာ - 09xxxxxxxxx">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Delivery Address</label>
+                        <textarea name="address" class="form-control" rows="4" required
+                            placeholder="ပစ္စည်းပို့ရမည့် လိပ်စာအပြည့်အစုံ ရေးပေးပါ...">{{ profile.address }}</textarea>
+                    </div>
+
+                    <!-- Payment Method ရွေးချယ်ရန် နေရာ -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-secondary d-block mb-3">Payment Method</label>
+
+                        <!-- Cash on Delivery ခလုတ် -->
+                        <div class="form-check bg-light p-3 rounded border mb-2 px-4 cursor-pointer">
+                            <input class="form-check-input" type="radio" name="payment" id="cod" value="COD" checked
+                                onclick="togglePaymentInfo('COD')">
+                            <label class="form-check-label fw-bold text-dark ms-2" for="cod">
+                                <i class="bi bi-cash-coin text-success me-1"></i> Cash on Delivery
+                            </label>
+                        </div>
+
+                        <!-- KPay ခလုတ် -->
+                        <div class="form-check bg-light p-3 rounded border mb-2 px-4 cursor-pointer">
+                            <input class="form-check-input" type="radio" name="payment" id="kpay" value="KPAY"
+                                onclick="togglePaymentInfo('KPAY')">
+                            <label class="form-check-label fw-bold text-dark ms-2" for="kpay">
+                                <i class="bi bi-wallet2 text-primary me-1"></i> KPay (KBZPay)
+                            </label>
+                        </div>
+
+                        <!-- WavePay ခလုတ် -->
+                        <div class="form-check bg-light p-3 rounded border mb-3 px-4 cursor-pointer">
+                            <input class="form-check-input" type="radio" name="payment" id="wavepay" value="WAVEPAY"
+                                onclick="togglePaymentInfo('WAVEPAY')">
+                            <label class="form-check-label fw-bold text-dark ms-2" for="wavepay">
+                                <i class="bi bi-wallet2 text-warning me-1"></i> WavePay
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 🌟 Dynamic ဖြစ်မည့် Payment Info Box (စစချင်း ဖျောက်ထားမည်) -->
+                    <div id="payment-info-box"
+                        class="card border border-primary bg-light p-3 mb-4 shadow-sm animate__animated animate__fadeIn"
+                        style="display: none;">
+                        <h6 class="fw-bold text-primary mb-2" id="payment-title">Payment Account Information</h6>
+                        <div class="p-2 bg-white rounded border">
+                            <p class="mb-1 text-muted">ဖုန်းနံပါတ် - <span class="fw-bold text-dark"
+                                    id="payment-phone">09xxxxxxxxx</span></p>
+                            <p class="mb-0 text-muted">အကောင့်နာမည် - <span class="fw-bold text-dark"
+                                    id="payment-name">U Mg Mg</span></p>
+                        </div>
+                        <small class="text-danger mt-2 d-block">* ကျေးဇူးပြု၍ ငွေလွှဲပြီးလျှင် အော်ဒါတင်ခြင်းကို
+                            ဆက်လုပ်ပေးပါဗျာ။</small>
+                    </div>
+
+                    <!-- 🌟 JavaScript အပိုင်း (Dynamic ပြောင်းလဲပေးရန်) -->
+                    <script>
+                        function togglePaymentInfo(method) {
+                            const infoBox = document.getElementById('payment-info-box');
+                            const title = document.getElementById('payment-title');
+                            const phone = document.getElementById('payment-phone');
+                            const name = document.getElementById('payment-name');
+
+                            if (method === 'COD') {
+                                // Cash on Delivery ဆိုလျှင် Info Box ကို ပြန်ဖျောက်ထားမည်
+                                infoBox.style.display = 'none';
+                            } else if (method === 'KPAY') {
+                                // KPay ရွေးလျှင် အချက်အလက်များကို ပြောင်းပြီး ပြမည်
+                                title.innerText = 'KBZPay ဖြင့် ငွေလွှဲရန် အချက်အလက်များ';
+                                phone.innerText = '09-258377511'; 
+                                name.innerText = 'Yul';     
+                                infoBox.style.display = 'block';
+                            } else if (method === 'WAVEPAY') {
+                                // WavePay ရွေးလျှင် အချက်အလက်များကို ပြောင်းပြီး ပြမည်
+                                title.innerText = 'WavePay ဖြင့် ငွေလွှဲရန် အချက်အလက်များ';
+                                phone.innerText = '09-258377511'; 
+                                name.innerText = 'Yul';    
+                                infoBox.style.display = 'block';
+                            }
+                        }
+                    </script>
+                </div>
+            </div>
+
+            <!-- ညာဘက်ခြမ်း: Order Summary (ပြန်လည်စစ်ဆေးရန်) -->
+            <div class="col-lg-5">
+                <div class="card shadow-sm p-4 border-0 bg-light">
+                    <h5 class="fw-bold mb-3 text-secondary">Order Summary</h5>
+                    <ul class="list-group list-group-flush mb-3">
+                        {% for cart_item in cart_items %}
+                        <li
+                            class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0 text-muted">
+                            <div>
+                                <span class="fw-bold text-dark">{{ cart_item.item.name }}</span>
+                                <small class="d-block">Qty: {{ cart_item.quantity }}</small>
+                            </div>
+                            <span class="fw-bold text-dark">${{ cart_item.item.sale_price }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+
+                    <div class="d-flex justify-content-between align-items-center border-top pt-3 mb-4">
+                        <span class="fs-5 fw-bold text-dark">Total Amount:</span>
+                        <span class="fs-4 fw-bold text-danger">${{ total_amount }}</span>
+                    </div>
+
+                    <!-- 🌟 ဤခလုတ်ကို နှိပ်မှသာ အော်ဒါက ဒေတာဘေ့စ်ထဲ ရောက်သွားပါမည် -->
+                    <button type="submit" class="btn btn-success w-100 py-2.5 fw-bold rounded shadow-sm">
+                        <i class="bi bi-bag-check"></i> Place Order
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

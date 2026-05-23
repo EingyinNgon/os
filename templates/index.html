@@ -6,33 +6,6 @@
 
 <div class="container mt-4">
 
-   <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <span class="text-muted small fw-medium"><i class="bi bi-clock me-1"></i> Real-time Shopping System</span>
-        
-        <div class="d-flex align-items-center gap-4">
-            
-            {% if user.is_authenticated %}
-                <a href="#" class="minimal-nav-link text-dark" title="Profile ({{ user.username }})">
-                    <i class="bi bi-person fs-4"></i>
-                </a>
-            {% else %}
-                <a href="{% url 'login' %}?next={{ request.path }}" class="minimal-nav-link text-dark" title="Log In">
-                    <i class="bi bi-person fs-4"></i>
-                </a>
-            {% endif %}
-
-            <a href="{% url 'cart_detail' %}" class="minimal-nav-link text-dark position-relative" title="Shopping Bag">
-                <i class="bi bi-bag fs-4"></i>
-                
-                {% if cart and cart.cart_items.count > 0 %}
-                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="width: 8px; height: 8px;">
-                    </span>
-                {% endif %}
-            </a>
-
-        </div>
-    </div>
-
     <div class="position-relative overflow-hidden p-5 mb-5 text-white rounded-4 shadow"
         style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
 
@@ -58,14 +31,14 @@
 
     <div class="row mb-5">
         <div class="col-md-4">
-            <form method="GET" action="" id="filterForm">
+            <form method="GET" action="#products-section" id="filterForm">
                 <label class="form-label fw-bold text-dark mb-2">
                     <i class="bi bi-filter-left text-primary me-1"></i> Filter by Category
                 </label>
                 <select name="subcategory"
                     class="form-select form-select-lg border-2 border-primary shadow-none rounded-3 fw-medium text-dark"
                     onchange="this.form.submit()" style="cursor: pointer;">
-                    <option value=""> All Categories (အားလုံးကြည့်မည်)</option>
+                    <option value="all"> All Categories </option>
                     {% for sub in sub_categories %}
                     <option value="{{ sub.id }}" {% if selected_sub_ca t==sub.id|stringformat:'s' or
                         selected_sub_cat==sub.id|slugify %}selected>
@@ -77,9 +50,11 @@
         </div>
     </div>
 
-    <h4 class="mb-4 text-dark fw-bold border-bottom pb-2 mt-4">
-        <i class="bi bi-grid-3x3-gap-fill text-primary me-2"></i>Our Products
-    </h4>
+    <section>
+        <h4 id="products-section" class="mb-4 text-dark fw-bold border-bottom pb-2 mt-4">
+            <i class="bi bi-grid-3x3-gap-fill text-primary me-2"></i>Our Products
+        </h4>
+    </section>
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
         {% for item in items %}
@@ -123,7 +98,7 @@
                     </div>
 
                     {% if user.is_authenticated %}
-                    <a href="{% url 'add_to_cart' item.id %}"
+                    <a href="{% url 'add_to_cart' item.id %}?next={{ request.path }}"
                         class="btn btn-outline-primary w-100 btn-sm rounded-pill py-2 {% if item.amount <= 0 %}disabled{% endif %}">
                         <i class="bi bi-cart-plus me-1"></i>Add to Cart
                     </a>
@@ -147,8 +122,58 @@
 
 </div>
 
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Django Session ထဲက ကိန်းဂဏန်းကို JS ကပြောင်းလဲဖတ်ယူခြင်း
+        let cartCount = "{{ request.session.cart_items_count|default:0 }}";
+        let badge = document.getElementById("dynamic_cart_count");
+        
+        if (badge && parseInt(cartCount) > 0) {
+            badge.innerText = cartCount;   // ခြင်းတောင်းထဲက အရေအတွက်ကို ထည့်ပေးခြင်း
+            badge.style.display = "inline-block"; // ပစ္စည်းရှိမှ အနီရောင်ဝိုင်းလေး ဖော်ပြခြင်း
+        } else if (badge) {
+            badge.style.display = "none";  // ပစ္စည်းမရှိရင် ဖျောက်ထားခြင်း
+        }
+    });
+</script>
+
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;700;800&display=swap');
+
+    /* ✨ Django က ပစ္စည်းအသစ်ဝင်လာရင် ဤ Animation ကို ဖွင့်ပေးပါမည် */
+    .cart-shake {
+        animation: luxury-shake 0.6s cubic-bezier(.36, .07, .19, .97) both;
+        transform: translate3d(0, 0, 0);
+    }
+
+    @keyframes luxury-shake {
+
+        10%,
+        90% {
+            transform: translate3d(-1px, 0, 0) scale(1.1);
+        }
+
+        20%,
+        80% {
+            transform: translate3d(2px, 0, 0) scale(1.1);
+        }
+
+        30%,
+        50%,
+        70% {
+            transform: translate3d(-4px, 0, 0) scale(1.1);
+        }
+
+        40%,
+        60% {
+            transform: translate3d(4px, 0, 0) scale(1.1);
+        }
+    }
+
+    html {
+        scroll-behavior: smooth;
+        /* 👈 Screen ကို အိအိလေး လျှောကျသွားစေမယ့် Magic စာကြောင်း */
+    }
 
     body {
         font-family: 'Plus Jakarta Sans', sans-serif;

@@ -26,11 +26,30 @@
                     <li class="nav-item"><a class="nav-link" href="{% url 'category_list' %}">Categories</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'subcategory_list' %}">Sub-Categories</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'item_list' %}">Items</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'order_index' %}">My Order</a></li>
+                    <li class="nav-item"><a class="nav-link">Order List</a></li>
+                    <li class="nav-item"><a class="nav-link">Order Dashboard</a></li>
+                   
                     {% endif %}
                 </ul>
 
                 <ul class="navbar-nav ms-auto">
                     {% if user.is_authenticated %}
+                    <li>
+                        <div class="ms-auto d-flex align-items-center">
+                            <a href="{% url 'cart_detail' %}"
+                                class="nav-cart-link text-white position-relative {% if messages %}cart-shake{% endif %}"
+                                title="Shopping Bag">
+                                <i class="bi bi-bag fs-4"></i><span id="dynamic_cart_count"
+                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white font-monospace"
+                                    style="font-size: 0.65rem; padding: 0.25rem 0.4rem; transform: translate(10%, -30%) !important; {% if not request.session.cart_items_count %} display: none; {% endif %}">
+                                    {{ request.session.cart_items_count|default:0 }}
+                                </span>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </li>
+
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
@@ -53,20 +72,18 @@
                                     </button>
                                 </form>
                             </li>
-                        {% endif %} </ul>
+                            {% endif %}
+                        </ul>
                     </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">
-                            <i class="bi bi-box-arrow-in-right me-1"></i>Login</a>
-                    </li>
-                    {% endif %}
+
+
+
                 </ul>
 
             </div>
         </div>
     </nav>
-   
+
     <div class="container">
         {% block breadcrumb %}{% endblock %}
 
@@ -78,3 +95,47 @@
 </body>
 
 </html>
+<style>
+    /* Navbar ထဲက Cart Icon အတွက် Minimalist Style */
+    .nav-cart-link {
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .nav-cart-link:hover {
+        transform: scale(1.1);
+        opacity: 0.7;
+    }
+
+    /* ပစ္စည်းထည့်လိုက်လျှင် တုန်ခါသွားစေမည့် Shake Animation */
+    .cart-shake {
+        animation: luxury-shake 0.6s cubic-bezier(.36, .07, .19, .97) both;
+        transform: translate3d(0, 0, 0);
+    }
+
+    @keyframes luxury-shake {
+
+        10%,
+        90% {
+            transform: translate3d(-1px, 0, 0) scale(1.1);
+        }
+
+        20%,
+        80% {
+            transform: translate3d(2px, 0, 0) scale(1.1);
+        }
+
+        30%,
+        50%,
+        70% {
+            transform: translate3d(-4px, 0, 0) scale(1.1);
+        }
+
+        40%,
+        60% {
+            transform: translate3d(4px, 0, 0) scale(1.1);
+        }
+    }
+</style>
