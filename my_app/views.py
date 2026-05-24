@@ -517,10 +517,33 @@ def order_success(request):
 
 @login_required
 def order_index(request):
-    Order = User.objects.all().select_related('userprofile').order_by('-date_joined')
-    paginator = Paginator(Order, 10)
+    orders = Order.objects.filter(created_by=request.user)
+    paginator = Paginator(orders, 10)
 
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    return render(request, 'order/index.html', {'Order': page_obj})
+    # print(f'\n \n \n {page_obj}\n \n \n')
+    return render(request, 'order/index.html', {'orders': page_obj})
+
+@login_required
+def order_dash(request):
+    orders = Order.objects.all()
+    paginator = Paginator(orders, 10)
+
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    # print(f'\n \n \n {page_obj}\n \n \n')
+    return render(request, 'order/dash.html', {'orders': page_obj})
+
+def order_test(request, pk):
+    order = Order.objects.filter(pk=pk).first()
+    if order:
+        order.order_status = request.GET.get('status')
+        order.save()
+        return redirect('order_dash')
+    return HttpResponse(pk)
+
+
+
+
     
