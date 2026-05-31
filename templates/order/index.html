@@ -8,27 +8,20 @@
             <thead class="table-dark">
                 <tr>
                     <th class="py-3">No</th>
-                    <th class="py-3 px-4">Item</th>
-                    <th class="py-3 px-4">Amount</th>
-                    <th class="py-3 px-4">Price</th>
-                    <th class="py-3 px-4">Discount</th>
-                    <th class="py-3 px-4">Order Status</th>
-
+                    <th class="py-3 px-4">Order No</th>
+                    <th class="py-3 px-4">Shipping Phone</th>
+                    <th class="py-3 px-4">Shipping Address</th>
                 </tr>
             </thead>
             <tbody>
                 {% for order in orders %}
                 <tr>
-                    <td>{{ orders.start_index|add:forloop.counter0 }}</td>
-                    <td>{{ order.item }}</td>
-                    <td>{{ order.amount }}</td>
-                    <td>{{ order.price }}</td>
-                    <td>{{ order.discount }}</td>
-                    <td> <span
-                            class="{% if order.order_status == 'pending' %}text-warning {% elif order.order_status == 'cancelled' %}text-danger {% else %}text-success {% endif %}">
-                            {{ order.get_order_status_display }}
-                        </span></td>
-
+                    <td>
+                        <a href="{% url 'order_detail' order.id %}">{{ orders.start_index|add:forloop.counter0 }}</a>
+                    </td>
+                    <td>{{ order.order_number }}</td>
+                    <td>{{ order.shipping_phone }}</td>
+                    <td>{{ order.shipping_address }}</td>
                 </tr>
                 {% empty %}
                 <tr>

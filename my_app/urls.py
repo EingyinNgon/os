@@ -40,5 +40,6 @@ urlpatterns = [
     path('order', views.order_index, name='order_index'),
     path('order/dash', views.order_dash, name='order_dash'),
 
-    path('order/test/<int:pk>', views.order_test, name='order_test')
+    path('order/test/<int:pk>', views.order_test, name='order_test'),
+    path('order/detail/<int:pk>/', views.order_detail, name='order_detail'),
 ]

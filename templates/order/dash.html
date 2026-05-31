@@ -34,8 +34,15 @@
                         </span>
                         </td>
                         <td>
+                        
+                            {% if order.order_status == 'pending' %}
+
                             <a class="btn btn-sm btn-primary" href="{% url 'order_test' order.id %}?status=completed">Approve</a>
-                            <a class="btn btn-sm btn-danger" href="{% url 'order_test' order.id %}?status=cancelled">Cancel</a>               
+                            <a class="btn btn-sm btn-danger" href="{% url 'order_test' order.id %}?status=cancelled">Cancel</a>  
+                            {% else %}
+                            <a class="btn btn-sm btn-warning" href="{% url 'order_test' order.id %}?status=pending">Edit</a> 
+                            {% endif %}          
+
                         </td>                        
                         <td>{{ order.created_by}}</td>                        
                     </tr>

@@ -99,11 +99,28 @@ class Item(models.Model):
         return self.name   
 
 class Order(models.Model):
+    order_number = models.CharField(default='PYG-0000')
+    created_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        related_name='orders_processed'
+    )
+    shipping_phone = models.CharField(max_length=15)
+    shipping_address = models.TextField()
+
+class OrderDetail(models.Model):
     # (၁) ဘယ်ပစ္စည်းကို ရောင်းတာလဲ (Relationship)
     item = models.ForeignKey(
         'Item', 
         on_delete=models.PROTECT, # ပစ္စည်းစာရင်းကို ဖျက်လိုက်ပေမယ့် ရောင်းရတဲ့စာရင်း မပျက်စေချင်လို့ PROTECT သုံးတာ ပိုကောင်းပါတယ်
-        related_name='orders'
+        related_name='orders_detail'
+    )
+
+    order_id =  models.ForeignKey(
+        'Order', 
+        on_delete=models.PROTECT, # ပစ္စည်းစာရင်းကို ဖျက်လိုက်ပေမယ့် ရောင်းရတဲ့စာရင်း မပျက်စေချင်လို့ PROTECT သုံးတာ ပိုကောင်းပါတယ်
+        related_name='order'
     )
     
     # (၂) အရောင်းအချက်အလက်များ
@@ -120,12 +137,7 @@ class Order(models.Model):
     
     # (၄) Audit Fields
     is_deleted = models.BooleanField(default=False)
-    created_by = models.ForeignKey(
-        User, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        related_name='orders_processed'
-    )
+    
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

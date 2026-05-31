@@ -1,9 +1,12 @@
+import random
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import Category, UserProfile, SubCategory, Item, Cart, CartItem, Order
 from django.core.paginator import Paginator
+from .models import Category, UserProfile, SubCategory, Item, Cart, CartItem, OrderDetail, Order
+
+
 
 def is_admin(user):
     return user.is_superuser
@@ -485,27 +488,39 @@ def place_order(request):
         shipping_phone = request.POST.get('phone_no')
         shipping_address = request.POST.get('address')
         
+        try:
+            order = Order.objects.create(
+                order_number = 'PYG-'+str(random.randint(1, 4)),
+                created_by = request.user,
+                shipping_phone = shipping_phone,
+                shipping_address = shipping_address)
+            order.save()
+
         # ခြင်းတောင်းထဲက ပစ္စည်းတစ်ခုချင်းစီအတွက် မင်းရဲ့ Order Model ပုံစံအတိုင်း Loop ပတ်သိမ်းမည်
-        for cart_item in cart_items:
-            Order.objects.create(
-                item=cart_item.item,
-                amount=cart_item.quantity,
-                price=cart_item.item.sale_price,
-                discount=0.00,
-                order_status='pending',
-                created_by=request.user
-            )
-            
-            # ပစ္စည်းလက်ကျန် (Stock) နုတ်ခြင်း
-            if hasattr(cart_item.item, 'amount') and cart_item.item.amount >= cart_item.quantity:
-                cart_item.item.amount -= cart_item.quantity
-                cart_item.item.save()
+            for cart_item in cart_items:
+                OrderDetail.objects.create(
+                    item=cart_item.item,
+                    amount=cart_item.quantity,
+                    price=cart_item.item.sale_price,
+                    discount=cart_item.item.discount,
+                    order_status='pending',
+                    order_id = order
+                    
+                )
+                
+                # ပစ္စည်းလက်ကျန် (Stock) နုတ်ခြင်း
+                if hasattr(cart_item.item, 'amount') and cart_item.item.amount >= cart_item.quantity:
+                    cart_item.item.amount -= cart_item.quantity
+                    cart_item.item.save()
+              # ဝယ်ယူမှု ပြီးမြောက်၍ ခြင်းတောင်းကို ရှင်းထုတ်ခြင်း
+            cart_items.delete()
+            request.session['cart_items_count'] = 0
         
-        # ဝယ်ယူမှု ပြီးမြောက်၍ ခြင်းတောင်းကို ရှင်းထုတ်ခြင်း
-        cart_items.delete()
-        request.session['cart_items_count'] = 0
-        
-        return redirect('order_success') # Success View ဆီ သွားခိုင်းမည်
+            return redirect('order_index') # Success View ဆီ သွားခိုင်းမည်
+
+        except Exception as e:
+            print(e)
+            return redirect('checkout')
         
     return redirect('checkout_view')
 
@@ -527,7 +542,7 @@ def order_index(request):
 
 @login_required
 def order_dash(request):
-    orders = Order.objects.all()
+    orders = Order.objects.all().order_by('-id')
     paginator = Paginator(orders, 10)
 
     page_number = request.GET.get('page')
@@ -542,6 +557,15 @@ def order_test(request, pk):
         order.save()
         return redirect('order_dash')
     return HttpResponse(pk)
+
+def order_detail(request, pk):
+    order = Order.objects.filter(pk=pk).first()
+    order_items = OrderDetail.objects.filter(order_id=pk)
+    context = {
+        'order': order,
+        'order_items': order_items
+    }
+    return render(request, 'order/order_detail.html', context)
 
 
 

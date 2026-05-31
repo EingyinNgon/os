@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+    {% block content %}
+    <div class="main-card">
+
+        <div class="table-responsive">
+            <table class="table table-hover border">
+                <thead class="table-dark">
+                    <tr>
+                         <th class="py-3">No</th>
+                        <th class="py-3 px-4">Item</th>
+                        <th class="py-3 px-4">Amount</th>
+                        <th class="py-3 px-4">Price</th>
+                        <th class="py-3 px-4">Discount</th>                        
+                        <th class="py-3 px-4">Order Status</th>                        
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order_items %}
+                    <tr>
+                        <td>{{ orders.start_index|add:forloop.counter0 }}</td>
+                        <td>{{ item.item.name }}</td>
+                        <td>{{ item.amount }}</td>
+                        <td>{{ item.price }}</td>
+                        <td>{{ item.discount }}</td>
+                        <td>
+                           <span class="fw-medium text-capitalize text-warning">{{ item.order_status }}</span>
+                        </td>                      
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center py-5 text-muted">
+                            No Item found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+           
+        </div>
+         {% include 'paggination/pagg.html' with page_obj=orders %}
+    </div>
+    {% endblock %}
+    </div>
