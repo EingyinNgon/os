@@ -37,9 +37,12 @@ urlpatterns = [
     path('place-order/', views.place_order, name='place_order'), # Order တကယ်တင်ရန်
     path('order-success/', views.order_success, name='order_success'), # အောင်မြင်ကြောင်းပြရန်
 
+    # customer order list
     path('order', views.order_index, name='order_index'),
-    path('order/dash', views.order_dash, name='order_dash'),
+     path('order/detail/<int:pk>/', views.order_detail, name='order_detail'),
 
+    # admin order list
+    path('order/dash', views.order_dash, name='order_dash'),
     path('order/test/<int:pk>', views.order_test, name='order_test'),
-    path('order/detail/<int:pk>/', views.order_detail, name='order_detail'),
+   
 ]

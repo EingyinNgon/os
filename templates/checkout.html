@@ -14,13 +14,13 @@
                     <div class="mb-3">
                         <label class="form-label fw-medium">Contact Phone Number</label>
                         <input type="text" name="phone_no" class="form-control" value="{{ profile.phone_no }}" required
-                            placeholder="ဥပမာ - 09xxxxxxxxx">
+                            placeholder="09.....">
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-medium">Delivery Address</label>
                         <textarea name="address" class="form-control" rows="4" required
-                            placeholder="ပစ္စည်းပို့ရမည့် လိပ်စာအပြည့်အစုံ ရေးပေးပါ...">{{ profile.address }}</textarea>
+                            placeholder="Enter Your Address">{{ profile.address }}</textarea>
                     </div>
 
                     <!-- Payment Method ရွေးချယ်ရန် နေရာ -->
@@ -61,13 +61,12 @@
                         style="display: none;">
                         <h6 class="fw-bold text-primary mb-2" id="payment-title">Payment Account Information</h6>
                         <div class="p-2 bg-white rounded border">
-                            <p class="mb-1 text-muted">ဖုန်းနံပါတ် - <span class="fw-bold text-dark"
+                            <p class="mb-1 text-muted">phone no - <span class="fw-bold text-dark"
                                     id="payment-phone">09xxxxxxxxx</span></p>
-                            <p class="mb-0 text-muted">အကောင့်နာမည် - <span class="fw-bold text-dark"
+                            <p class="mb-0 text-muted">your acc name - <span class="fw-bold text-dark"
                                     id="payment-name">U Mg Mg</span></p>
                         </div>
-                        <small class="text-danger mt-2 d-block">* ကျေးဇူးပြု၍ ငွေလွှဲပြီးလျှင် အော်ဒါတင်ခြင်းကို
-                            ဆက်လုပ်ပေးပါဗျာ။</small>
+                        <small class="text-danger mt-2 d-block">* </small>
                     </div>
 
                     <!-- 🌟 JavaScript အပိုင်း (Dynamic ပြောင်းလဲပေးရန်) -->
@@ -83,13 +82,13 @@
                                 infoBox.style.display = 'none';
                             } else if (method === 'KPAY') {
                                 // KPay ရွေးလျှင် အချက်အလက်များကို ပြောင်းပြီး ပြမည်
-                                title.innerText = 'KBZPay ဖြင့် ငွေလွှဲရန် အချက်အလက်များ';
+                                title.innerText = 'KBZPay';
                                 phone.innerText = '09-258377511'; 
                                 name.innerText = 'Yul';     
                                 infoBox.style.display = 'block';
                             } else if (method === 'WAVEPAY') {
                                 // WavePay ရွေးလျှင် အချက်အလက်များကို ပြောင်းပြီး ပြမည်
-                                title.innerText = 'WavePay ဖြင့် ငွေလွှဲရန် အချက်အလက်များ';
+                                title.innerText = 'WavePay';
                                 phone.innerText = '09-258377511'; 
                                 name.innerText = 'Yul';    
                                 infoBox.style.display = 'block';

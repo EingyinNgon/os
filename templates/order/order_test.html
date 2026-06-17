@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="main-card">
+
+    <div class="table-responsive">
+        <table class="table table-hover border">
+            <thead class="table-dark">
+                <tr>
+                    <th class="py-3">No</th>
+                    <th class="py-3 px-4">Customer</th>
+                    <th class="py-3 px-4">Phone</th>
+                    <th class="py-3 px-4">Shipping Address</th>
+                    <th class="py-3 px-4">Item Name</th>
+                    <th class="py-3 px-4">Qty</th>
+                    <th class="py-3 px-4">Price</th>
+                    <th class="py-3 px-4">Status</th>
+                    <th class="py-3 px-4">Order Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>{{ order.order_id.created_by.username }}</td>
+                    <td>{{ order.order_id.shipping_phone }}</td>
+                    <td class="text-start">{{ order.order_id.shipping_address }}</td>
+
+                    <td class="text-start"><strong>{{ order.item.name }}</strong></td>
+                    <td>{{ order.amount }} items</td>
+                    <td class="text-danger fw-bold">{{ order.price }} MMK</td>
+
+                    <td>
+                        <span
+                            class="badge {% if order.order_status == 'pending' %}bg-warning text-dark{% elif order.order_status == 'cancelled' %}bg-danger{% else %}bg-success{% endif %} p-2">
+                            {{ order.get_order_status_display }}
+                        </span>
+                    </td>
+
+                    <td>
+                        <div class="d-flex justify-content-center gap-1">
+                            <a href="{% url 'order_test' order.pk %}?status=completed"
+                                class="btn btn-sm btn-success fw-bold">
+                                Approve
+                            </a>
+                            <a href="{% url 'order_test' order.pk %}?status=cancelled"
+                                class="btn btn-sm btn-danger fw-bold">
+                                Cancel
+                            </a>
+                        </div>
+                    </td>
+                </tr>                
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+</div>

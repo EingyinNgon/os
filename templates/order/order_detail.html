@@ -18,7 +18,7 @@
                 <tbody>
                     {% for item in order_items %}
                     <tr>
-                        <td>{{ orders.start_index|add:forloop.counter0 }}</td>
+                        <td>{{ order_items.start_index|add:forloop.counter0 }}</td>
                         <td>{{ item.item.name }}</td>
                         <td>{{ item.amount }}</td>
                         <td>{{ item.price }}</td>
@@ -38,7 +38,7 @@
             </table>
            
         </div>
-         {% include 'paggination/pagg.html' with page_obj=orders %}
+         {% include 'paggination/pagg.html' with page_obj=order_itemss %}
     </div>
     {% endblock %}
     </div>

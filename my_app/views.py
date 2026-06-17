@@ -532,7 +532,7 @@ def order_success(request):
 
 @login_required
 def order_index(request):
-    orders = Order.objects.filter(created_by=request.user)
+    orders = Order.objects.filter(created_by=request.user).prefetch_related('order')
     paginator = Paginator(orders, 10)
 
     page_number = request.GET.get('page')
@@ -540,9 +540,10 @@ def order_index(request):
     # print(f'\n \n \n {page_obj}\n \n \n')
     return render(request, 'order/index.html', {'orders': page_obj})
 
+# admin order list
 @login_required
-def order_dash(request):
-    orders = Order.objects.all().order_by('-id')
+def order_dash(request): 
+    orders = OrderDetail.objects.all().order_by('-id')
     paginator = Paginator(orders, 10)
 
     page_number = request.GET.get('page')
@@ -550,22 +551,27 @@ def order_dash(request):
     # print(f'\n \n \n {page_obj}\n \n \n')
     return render(request, 'order/dash.html', {'orders': page_obj})
 
+# admin order detail
 def order_test(request, pk):
-    order = Order.objects.filter(pk=pk).first()
+    order = OrderDetail.objects.filter(pk=pk).first()
     if order:
-        order.order_status = request.GET.get('status')
-        order.save()
-        return redirect('order_dash')
-    return HttpResponse(pk)
+        status_from_url = request.GET.get('status')
+        if status_from_url:
+            order.order_status = status_from_url
+            order.save()
+            return redirect('order_dash')
+    return render(request, 'order/order_test.html', {'order': order})
 
 def order_detail(request, pk):
-    order = Order.objects.filter(pk=pk).first()
     order_items = OrderDetail.objects.filter(order_id=pk)
-    context = {
-        'order': order,
-        'order_items': order_items
-    }
-    return render(request, 'order/order_detail.html', context)
+
+    paginator = Paginator(order_items, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    # print(f'\n \n \n {page_obj}\n \n \n')
+    return render(request, 'order/order_detail.html', {'order_items': page_obj})
+
+  
 
 
 

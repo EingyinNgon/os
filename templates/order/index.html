@@ -11,17 +11,26 @@
                     <th class="py-3 px-4">Order No</th>
                     <th class="py-3 px-4">Shipping Phone</th>
                     <th class="py-3 px-4">Shipping Address</th>
+                    <th class="py-3 px-4">Order Status</th>
                 </tr>
             </thead>
             <tbody>
                 {% for order in orders %}
                 <tr>
-                    <td>
-                        <a href="{% url 'order_detail' order.id %}">{{ orders.start_index|add:forloop.counter0 }}</a>
-                    </td>
-                    <td>{{ order.order_number }}</td>
+                    <td> {{ orders.start_index|add:forloop.counter0 }}</td>
+                    <td><a href="{% url 'order_detail' order.id %}">{{ order.order_number }}</a></td>
                     <td>{{ order.shipping_phone }}</td>
                     <td>{{ order.shipping_address }}</td>
+                    <td>
+                        {% if order.order.all %}
+                        {% with last_detail=order.order.last %}
+                        <span class="{% if last_detail.order_status == 'pending' %}text-warning {% elif last_detail.get_order_status_display == 'Success' %}text-success {% else %}text-danger{% endif %}">
+                            {{ last_detail.get_order_status_display }}
+                        </span>
+                        {% endwith %}
+                        {% endif %}
+                    </td>
+
                 </tr>
                 {% empty %}
                 <tr>

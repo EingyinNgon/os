@@ -19,7 +19,7 @@ def save_user_profile(sender, instance, **kwargs):
 # (၃) Order ရဲ့ အခြေအနေ (ဥပမာ- Pending, Completed, Cancelled)
 ORDER_STATUS_CHOICES = [
         ('pending', 'Pending'),
-        ('completed', 'Completed'),
+        ('completed', 'Success'),
         ('cancelled', 'Cancelled'),
     ]
 
@@ -96,10 +96,13 @@ class Item(models.Model):
     image = models.ImageField(upload_to='items/', null=True, blank=True)
 
     def __str__(self):
-        return self.name   
+        return self.name  
+
+def generate_order_number():
+    return "SOME_GENERATED_NUMBER" 
 
 class Order(models.Model):
-    order_number = models.CharField(default='PYG-0000')
+    order_number = models.CharField(default='PYG-0000', max_length=20)
     created_by = models.ForeignKey(
         User, 
         on_delete=models.SET_NULL, 
